@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h2 {
+            font-size: 30px;
+        }
+
+        .container {
+            position: relative;
+            z-index: 0;
+            width: 75%;
+            background-color: rgb(228, 225, 225);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .up {
+            position: absolute;
+            z-index: 2;
+            top: -10%;
+            left: -1%;
+            height: 125px;
+            width: 105%;
+            background-color: rgb(228, 225, 225);
+            transform: rotate(-3deg);
+            overflow: hidden;
+        }
+
+        .down {
+            height: 70px;
+        }
+
+        .header {
+            position: relative;
+            z-index: 1;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: rgb(0, 0, 0);
+            background-color: rgb(247, 246, 246);
+            padding: 70px 0 70px 0;
+        }
+
+        .footer {
+            width: 75%;
+        }
+
+        .link {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 10px;
+            padding: 1%;
+            border-radius: 10px;
+            width: 75%;
+            color: rgb(169, 172, 173);
+            background-color: rgb(255, 252, 252);
+        }
+
+        .link a {
+            color: blue;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<center>
+    <div class="container">
+        <div class="up"></div>
+        <div class="header">
+            <h1>Logo</h1>
+            <p>
+            <h2>Reset Password</h2></p>
+            <div class="link">
+                <span>Here is the validation link</span>
+                <span><a href="">lien</a></span>
+            </div>
+            <div class="footer">
+                <p>If this request did not come from you, change your account password immediately to prevent further
+                    unauthorized access</p>
+            </div>
+        </div>
+        <div class="down"></div>
+    </div>
+</center>
+</body>
+</html>
