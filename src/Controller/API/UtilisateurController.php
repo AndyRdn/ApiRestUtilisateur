@@ -73,12 +73,13 @@ class UtilisateurController extends AbstractController
         $user->setMdpSimple("ieol7829");
         $this->userService->hashPassword($user); // setting the motDePasse field to the hashed version of mdpSimple
 
+        $updatedUser = $user->copy();
         try {
             $updatedUser = $serializer->deserialize(
                 $request->getContent(),
                 Utilisateur::class,
                 'json',
-                ['object_to_populate' => $user, 'groups' => ['update']]
+                ['object_to_populate' => $updatedUser, 'groups' => ['update']]
             );
         } catch (\Exception $e) {
             return $this->json(['error' => 'Input invalide'], 400);

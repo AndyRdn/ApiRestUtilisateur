@@ -206,4 +206,18 @@ class Utilisateur implements PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    public function copy(): Utilisateur
+    {
+        $newUser = new Utilisateur();
+        $newUser->setId($this->getId());
+        $newUser->setPrenom($this->getPrenom());
+        $newUser->setNom($this->getNom());
+        $newUser->setDateNaissance($this->getDateNaissance());
+        $newUser->setGenre($this->getGenre());
+        $newUser->setMail($this->getMail());
+        $newUser->setMotDePasse($this->getMotDePasse());
+
+        return $newUser;
+    }
 }
