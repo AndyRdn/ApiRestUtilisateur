@@ -9,6 +9,9 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Groups;
+
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
 class Utilisateur implements PasswordAuthenticatedUserInterface
 {
@@ -18,15 +21,19 @@ class Utilisateur implements PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['update'])]
     private ?string $prenom = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['update'])]
     private ?string $nom = null;
 
     #[ORM\Column]
+    #[Groups(['update'])]
     private ?\DateTimeImmutable $dateNaissance = null;
 
     #[ORM\Column]
+    #[Groups(['update'])]
     private ?int $genre = null;
 
     #[ORM\Column(length: 255)]
@@ -35,6 +42,7 @@ class Utilisateur implements PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private ?string $motDePasse = null;
 
+    #[Groups(['update'])]
     private ?string $mdpSimple = null;
 
     #[ORM\OneToOne(mappedBy: 'utilisateur', cascade: ['persist', 'remove'])]
