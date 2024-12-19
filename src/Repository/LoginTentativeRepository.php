@@ -40,4 +40,30 @@ class LoginTentativeRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+
+    public function update(LoginTentative $loginTentative, bool $flush = true): void
+    {
+        $this->getEntityManager()->persist($loginTentative);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+
+    public function findById(int $id): ?LoginTentative
+    {
+        return $this->find($id);
+    }
+    public function getLastByIdUtilisateur(int $idUtilisateur): ?LoginTentative
+    {
+
+        return $this->createQueryBuilder('lt')
+            ->join('lt.utilisateur', 'u')
+            ->andWhere('u.id = :idUtilisateur')
+            ->setParameter('idUtilisateur', $idUtilisateur)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
 }
