@@ -4,19 +4,28 @@ namespace App\Service;
 
 use App\Entity\Utilisateur;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
+use Symfony\Component\PropertyAccess\PropertyAccess;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Doctrine\Common\Annotations\AnnotationReader;
 
 class UtilisateurService
 {
+    private $hasherFactory;
     private UserPasswordHasherInterface $passwordHasher;
 
-    public function __construct(UserPasswordHasherInterface $passwordHasher)
+    public function __construct(PasswordHasherFactoryInterface $hasherFactory)
     {
-        $this->passwordHasher = $passwordHasher;
+        $this->hasherFactory = $hasherFactory->getPasswordHasher("plaintext");
+    }
+
+    public function updateUserFields(Utilisateur $user, $data) {
+        return [];
     }
 
     public function hashPassword(Utilisateur $user)
     {
-        $hashedPassword = $this->passwordHasher->hashPassword($user, $user->getMdpSimple());
+        $hashedPassword = $this->hasherFactory->hash($user->getMdpSimple());
         $user->setMotDePasse($hashedPassword);
     }
 

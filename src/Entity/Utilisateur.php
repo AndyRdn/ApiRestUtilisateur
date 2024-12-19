@@ -3,13 +3,10 @@
 namespace App\Entity;
 
 use App\Repository\UtilisateurRepository;
-use Couchbase\User;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
-use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
@@ -202,5 +199,25 @@ class Utilisateur
         $newUser->setMotDePasse($this->getMotDePasse());
 
         return $newUser;
+    }
+
+    /**
+     * Get the value of mdpSimple
+     */ 
+    public function getMdpSimple()
+    {
+        return $this->mdpSimple;
+    }
+
+    /**
+     * Set the value of mdpSimple
+     *
+     * @return  self
+     */ 
+    public function setMdpSimple($mdpSimple)
+    {
+        $this->mdpSimple = $mdpSimple;
+
+        return $this;
     }
 }
