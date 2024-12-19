@@ -34,7 +34,7 @@ class UtilisateurController extends AbstractController
 //        $hashedPassword = $this->passwordHasher->hashPassword($user, $user->getPlainPassword());
 //        $user->setMotDePasse($hashedPassword);
 
-        $mailer->send($this->email->createMail("miarantsoasuper3000@gmail.com", EmailSubject::AUTHENTIFICATION->value));
+        $mailer->send($this->email->createMail("tsinjoniaina.randriamirado@gmail.com", EmailSubject::AUTHENTIFICATION->value));
         return $this->json("Email sent", 200, [], []);
     }
 
