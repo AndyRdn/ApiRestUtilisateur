@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Repository\HistoriqueUtilisateurRepository;
 use Doctrine\ORM\Mapping as ORM;
+use DateTimeImmutable;
+
 
 #[ORM\Entity(repositoryClass: HistoriqueUtilisateurRepository::class)]
 class HistoriqueUtilisateur
@@ -113,5 +115,16 @@ class HistoriqueUtilisateur
         $this->updatedAt = $updatedAt;
 
         return $this;
+    }
+
+    public function makeFromUser(Utilisateur $utilisateur, DateTimeImmutable $date)
+    {
+        $this->setId($utilisateur->getId());
+        $this->prenom = $utilisateur->getPrenom();
+        $this->nom = $utilisateur->getNom();
+        $this->dateNaissance = $utilisateur->getDateNaissance();
+        $this->genre = $utilisateur->getGenre();
+        $this->motDePasse = $utilisateur->getMotDePasse();
+        $this->updatedAt = $date;
     }
 }
