@@ -3,20 +3,24 @@
 namespace App\Controller\API;
 
 use App\Entity\InscriptionPending;
+use App\Entity\Utilisateur;
+use App\Entity\HistoriqueUtilisateur;
 use App\Enum\EmailSubject;
-use App\Repository\InscriptionPendingRepository;
-use App\Repository\UtilisateurRepository;
 use App\Service\EmailService;
 use App\Service\JwtTokenManager;
 use App\Service\ResponseService;
+use App\Service\UtilisateurService;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
+use Symfony\Component\Serializer\SerializerInterface;
+use App\Repository\InscriptionPendingRepository;
 
 #[Route("/utilisateur")]
 class UtilisateurController extends AbstractController
@@ -25,19 +29,24 @@ class UtilisateurController extends AbstractController
     private EntityManagerInterface $entityManager;
     private JwtTokenManager $tokenManager;
     private EmailService $email;
-    private EntityManager $em;
+    private UtilisateurService $userService;
+    private SerializerInterface $serializer;
+    private $hasherFactory;
 
-    public function __construct(UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $entityManager, JwtTokenManager $tokenManager, EmailService $email, EntityManagerInterface $em)
+    public function __construct(UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $entityManager, JwtTokenManager $tokenManager, EmailService $email, EntityManagerInterface $em, UtilisateurService $userService, SerializerInterface $serializer, PasswordHasherFactoryInterface $hasherFactory)
     {
         $this->passwordHasher = $passwordHasher;
         $this->entityManager = $entityManager;
         $this->tokenManager = $tokenManager;
         $this->email = $email;
-        $this->em = $em;
+        $this->userService = $userService;
+        $this->serializer = $serializer;
+        $this->hasherFactory = $hasherFactory->getPasswordHasher("plaintext");
     }
 
     #[Route("/signup", name: "signin", methods: ["POST"])]
-    public function signup(MailerInterface $mailer, Request $request, InscriptionPendingRepository $repository): JsonResponse {
+    public function signup(MailerInterface $mailer, Request $request, InscriptionPendingRepository $repository): JsonResponse
+    {
         $jsonData = json_decode($request->getContent(), true);
 
         //setplain password to inscription pending and getmdp sy ny forongony
@@ -58,8 +67,8 @@ class UtilisateurController extends AbstractController
 
         $hashedPassword = $this->passwordHasher->hashPassword($user, $user->getMdpSimple());
         $user->setMotDePasse($hashedPassword);
-        $this->em->persist($user);
-        $this->em->flush();
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
 
         $insertedUser = $repository->findOneBy(["mail" => $user->getMail()]);
 
@@ -70,13 +79,45 @@ class UtilisateurController extends AbstractController
         return $this->json($resp);
     }
 
-    #[Route("/signin", methods: ["POST"])]
-    public function login(): JsonResponse {
+    #[Route("/{id}/update", methods: ["POST"])]
+    public function updateUser(
+        Request $request,
+        int $id
+    ): JsonResponse {
 
-//        if ($passwordHasher->isPasswordValid($user, $plainPassword)) {
-//
-//        }
-        return $this->json("haha", 200, [], []);
+        $user = $this->entityManager->getRepository(Utilisateur::class)->find($id);
+        $oldUser = $user->copy();
+        try {
+            $user = $this->serializer->deserialize(
+                $request->getContent(),
+                Utilisateur::class,
+                'json',
+                ['object_to_populate' => $user, 'groups' => ['update']]
+            );
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Input invalide'], 400);
+        }
+
+        $updatedFields = $this->userService->getUpdatedFields($oldUser, $user);
+        
+        $histoUser = new HistoriqueUtilisateur();
+        $message = "Aucun changement effectué";
+        if (!empty($updatedFields)) {
+            // updating the user row in table "utilisateur"
+            $this->entityManager->persist($user);
+            
+            // inserting a new user row for the update (at today's dateTime) in table "historique_utilisateur"
+            $histoUser->makeFromUser($user, new \DateTimeImmutable());
+            $this->entityManager->persist($histoUser);
+            
+            $this->entityManager->flush();
+
+            $message = "Informations de l'utilisateur modifiées avec succès.";
+        }
+        
+        $resp = ResponseService::getJSONTemplate("success", ["message" => $message]);
+
+        return $this->json($resp);
     }
 
 }
