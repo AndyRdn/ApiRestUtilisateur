@@ -140,6 +140,23 @@ class Utilisateur
         return $this;
     }
 
+    public function getMdpSimple(): ?string
+    {
+        return $this->mdpSimple;
+    }
+
+    public function setMdpSimple(?string $mdpSimple): static
+    {
+        $this->mdpSimple = $mdpSimple;
+
+        return $this;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->motDePasse;
+    }
+
     public function getTentative(): ?LoginTentative
     {
         return $this->tentative;
@@ -199,25 +216,5 @@ class Utilisateur
         $newUser->setMotDePasse($this->getMotDePasse());
 
         return $newUser;
-    }
-
-    /**
-     * Get the value of mdpSimple
-     */ 
-    public function getMdpSimple()
-    {
-        return $this->mdpSimple;
-    }
-
-    /**
-     * Set the value of mdpSimple
-     *
-     * @return  self
-     */ 
-    public function setMdpSimple($mdpSimple)
-    {
-        $this->mdpSimple = $mdpSimple;
-
-        return $this;
     }
 }

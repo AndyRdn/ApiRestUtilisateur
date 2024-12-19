@@ -22,16 +22,17 @@ class EmailService
     }
 
 
-    public function createMail(string $recept, string $subject, ?string $uid = null) {
+    public function createMail(string $recept, string $subject) {
         $pathToTemplate = "";
+        $misy = -1;
         for($i = 0; $i < count($this->subject); $i++) {
             if ($this->subject[$i]==$subject) {
                 $pathToTemplate .= $this->path[$i];
+                $misy = $i;
             }
         }
         $html = $this->twig->render($pathToTemplate, [
-            "codePin" => $this->generatePIN(),
-            "uid" => $uid
+            "codePin" => $this->generatePIN()
         ]);
 
         $email = (new Email())
