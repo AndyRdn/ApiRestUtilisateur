@@ -28,13 +28,10 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
-
 use function Symfony\Component\Clock\now;
-
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Serializer\SerializerInterface;
-use App\Repository\InscriptionPendingRepository;
+
 
 
 #[Route("/utilisateur")]
@@ -53,7 +50,7 @@ class UtilisateurController extends AbstractController
     private UtilisateurService $userService;
     private SerializerInterface $serializer;
 
-    public function __construct(UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $entityManager, JwtTokenManager $tokenManager, EmailService $email, EntityManagerInterface $em, UtilisateurRepository $utilisateurRepository, PasswordHasherFactoryInterface $hasherFactory, LoginTentativeRepository $tentativeRepository, ConfigService $configService, DoubleAuthentificationRepository $doubleAuthRepository)
+    public function __construct(UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $entityManager, JwtTokenManager $tokenManager, EmailService $email, EntityManagerInterface $em, UtilisateurRepository $utilisateurRepository, PasswordHasherFactoryInterface $hasherFactory, LoginTentativeRepository $tentativeRepository, ConfigService $configService, DoubleAuthentificationRepository $doubleAuthRepository, UtilisateurService $userService, SerializerInterface $serializer)
     {
         $this->passwordHasher = $passwordHasher;
         $this->entityManager = $entityManager;
@@ -138,28 +135,30 @@ class UtilisateurController extends AbstractController
     }
 
     #[Route("/confirmation/{id}", methods: ["POST"])]
-    public function checkPin(Request $request, int $id): JsonResponse {
+    public function checkPin(Request $request, int $id): JsonResponse
+    {
         $jsonData = json_decode($request->getContent(), true);
-        $code=$jsonData['code'];
-        $refDelais=$this->configService->getDelaisRef();
-        $doubleAuth=$this->doubleAuthRepository->findValidCodeByUtilisateur($id,$refDelais);
-        $refTentative=$this->configService->getTentativeRef();
-        $tentative=$this->tentativeRepository->getLastByIdUtilisateur($id);
+        $code = $jsonData['code'];
+        $refDelais = $this->configService->getDelaisRef();
+        $doubleAuth = $this->doubleAuthRepository->findValidCodeByUtilisateur($id, $refDelais);
+        $refTentative = $this->configService->getTentativeRef();
+        $tentative = $this->tentativeRepository->getLastByIdUtilisateur($id);
 //        dd($doubleAuth->getCode());
-        if ($doubleAuth != null && $doubleAuth->getCode()==$code && $tentative->getTentative()>0){
+        if ($doubleAuth != null && $doubleAuth->getCode() == $code && $tentative->getTentative() > 0) {
             $tentative->setTentative($refTentative);
             $this->tentativeRepository->update($tentative);
             return $this->json("Token Behhh", 200, [], []);
-        }else{
-            if ($tentative->getTentative()==0){
+        } else {
+            if ($tentative->getTentative() == 0) {
                 //cree une email Pour le reset de la tentative
                 return $this->json("Une email de reinitialisation a ete envoyer", 200, [], []);
-            }else{
-                $tentative->setTentative($tentative->getTentative()-1);
+            } else {
+                $tentative->setTentative($tentative->getTentative() - 1);
                 $this->tentativeRepository->update($tentative);
                 return $this->json("Faild", 200, [], []);
             }
         }
+    }
 
     #[Route("/{id}/update", methods: ["POST"])]
     public function updateUser(
