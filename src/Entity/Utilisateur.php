@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
-class Utilisateur implements PasswordAuthenticatedUserInterface
+class Utilisateur
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -34,8 +34,6 @@ class Utilisateur implements PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 255)]
     private ?string $motDePasse = null;
-
-    private ?string $mdpSimple = null;
 
     #[ORM\OneToOne(mappedBy: 'utilisateur', cascade: ['persist', 'remove'])]
     private ?LoginTentative $tentative = null;
@@ -133,23 +131,6 @@ class Utilisateur implements PasswordAuthenticatedUserInterface
         $this->motDePasse = $motDePasse;
 
         return $this;
-    }
-
-    public function getMdpSimple(): ?string
-    {
-        return $this->mdpSimple;
-    }
-
-    public function setMdpSimple(?string $mdpSimple): static
-    {
-        $this->mdpSimple = $mdpSimple;
-
-        return $this;
-    }
-
-    public function getPassword(): ?string
-    {
-        return $this->motDePasse;
     }
 
     public function getTentative(): ?LoginTentative
