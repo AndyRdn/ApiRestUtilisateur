@@ -42,7 +42,7 @@ class Utilisateur
     private ?string $motDePasse = null;
 
     #[Groups(['update'])]
-    private ?string $mdpSimple;
+    private ?string $mdpSimple = null;
 
     #[ORM\OneToOne(mappedBy: 'utilisateur', cascade: ['persist', 'remove'])]
     private ?LoginTentative $tentative = null;

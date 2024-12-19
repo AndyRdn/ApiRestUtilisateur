@@ -107,20 +107,25 @@ class UtilisateurController extends AbstractController
         }
 
         $updatedFields = $this->userService->getUpdatedFields($oldUser, $user);
-
+        
         $histoUser = new HistoriqueUtilisateur();
+        $message = "Aucun changement effectué";
         if (!empty($updatedFields)) {
             // updating the user row in table "utilisateur"
             $this->entityManager->persist($user);
-
+            
             // inserting a new user row for the update (at today's dateTime) in table "historique_utilisateur"
             $histoUser->makeFromUser($user, new \DateTimeImmutable());
             $this->entityManager->persist($histoUser);
-
+            
             $this->entityManager->flush();
-        }
 
-        return $this->json(["updatedFields" => $updatedFields, "user" => $user, "oldUser" => $oldUser], 200, [], []);
+            $message = "Informations de l'utilisateur modifiées avec succès.";
+        }
+        
+        $resp = ResponseService::getJSONTemplate("success", ["message" => $message]);
+
+        return $this->json($resp);
     }
 
 }

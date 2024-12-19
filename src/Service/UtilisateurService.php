@@ -41,9 +41,11 @@ class UtilisateurService
             $updatedFields[] = 'genre';
         }
 
-        $this->hashPassword($newUser);
-        if ($oldUser->getMotDePasse() !== $newUser->getMotDePasse()) {
-            $updatedFields[] = 'mdp';
+        if ($newUser->getMdpSimple()) {
+            $this->hashPassword($newUser);
+            if ($oldUser->getMotDePasse() !== $newUser->getMotDePasse()) {
+                $updatedFields[] = 'mdp';
+            }
         }
 
         return $updatedFields;
