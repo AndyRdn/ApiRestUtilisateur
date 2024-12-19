@@ -4,8 +4,8 @@ namespace App\Entity;
 
 use App\Repository\HistoriqueUtilisateurRepository;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Utilisateur;
 use DateTimeImmutable;
+
 
 #[ORM\Entity(repositoryClass: HistoriqueUtilisateurRepository::class)]
 class HistoriqueUtilisateur

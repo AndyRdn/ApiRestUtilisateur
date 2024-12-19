@@ -2,13 +2,15 @@
 
 namespace App\Controller\API;
 
-use App\Entity\HistoriqueUtilisateur;
 use App\Entity\InscriptionPending;
 use App\Entity\Utilisateur;
+use App\Entity\HistoriqueUtilisateur;
 use App\Enum\EmailSubject;
 use App\Service\EmailService;
 use App\Service\JwtTokenManager;
+use App\Service\ResponseService;
 use App\Service\UtilisateurService;
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,6 +20,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Serializer\SerializerInterface;
+use App\Repository\InscriptionPendingRepository;
 
 #[Route("/utilisateur")]
 class UtilisateurController extends AbstractController
@@ -30,7 +33,7 @@ class UtilisateurController extends AbstractController
     private SerializerInterface $serializer;
     private $hasherFactory;
 
-    public function __construct(UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $entityManager, JwtTokenManager $tokenManager, EmailService $email, UtilisateurService $userService, PasswordHasherFactoryInterface $hasherFactory, SerializerInterface $serializer)
+    public function __construct(UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $entityManager, JwtTokenManager $tokenManager, EmailService $email, EntityManagerInterface $em, UtilisateurService $userService, SerializerInterface $serializer, PasswordHasherFactoryInterface $hasherFactory)
     {
         $this->passwordHasher = $passwordHasher;
         $this->entityManager = $entityManager;
@@ -41,52 +44,39 @@ class UtilisateurController extends AbstractController
         $this->hasherFactory = $hasherFactory->getPasswordHasher("plaintext");
     }
 
-    // #[Route("/signup", name: "signin", methods: ["POST"])]
-    // public function signup(MailerInterface $mailer, Request $request, InscriptionPendingRepository $repository): JsonResponse
-    // {
-    //     $jsonData = json_decode($request->getContent(), true);
+    #[Route("/signup", name: "signin", methods: ["POST"])]
+    public function signup(MailerInterface $mailer, Request $request, InscriptionPendingRepository $repository): JsonResponse
+    {
+        $jsonData = json_decode($request->getContent(), true);
 
-    //     //setplain password to inscription pending and getmdp sy ny forongony
-    //     $user = new InscriptionPending();
-    //     $user->setPrenom($jsonData['prenom']);
-    //     $user->setNom($jsonData['nom']);
-    //     $user->setMail($jsonData['mail']);
-    //     $user->setGenre($jsonData['genre']);
-    //     $user->setDateNaissance(new \DateTimeImmutable($jsonData['dateNaissance']));
-    //     $user->setMdpSimple($jsonData['motDePasse']);
-    //     $verif = $jsonData['verification'];
-    //     if ($verif !== $user->getMdpSimple()) {
-    //         $resp = ResponseService::getJSONTemplate("error", [
-    //             "message" => "Veuillez bien verifier votre mot de passe",
-    //         ]);
-    //         return $this->json($resp, 500);
-    //     }
+        //setplain password to inscription pending and getmdp sy ny forongony
+        $user = new InscriptionPending();
+        $user->setPrenom($jsonData['prenom']);
+        $user->setNom($jsonData['nom']);
+        $user->setMail($jsonData['mail']);
+        $user->setGenre($jsonData['genre']);
+        $user->setDateNaissance(new \DateTimeImmutable($jsonData['dateNaissance']));
+        $user->setMdpSimple($jsonData['motDePasse']);
+        $verif = $jsonData['verification'];
+        if ($verif !== $user->getMdpSimple()) {
+            $resp = ResponseService::getJSONTemplate("error", [
+                "message" => "Veuillez bien verifier votre mot de passe",
+            ]);
+            return $this->json($resp, 500);
+        }
 
-    //     $hashedPassword = $this->passwordHasher->hashPassword($user, $user->getMdpSimple());
-    //     $user->setMotDePasse($hashedPassword);
-    //     $this->entityManager->persist($user);
-    //     $this->entityManager->flush();
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $user->getMdpSimple());
+        $user->setMotDePasse($hashedPassword);
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
 
-    //     $insertedUser = $repository->findOneBy(["mail" => $user->getMail()]);
+        $insertedUser = $repository->findOneBy(["mail" => $user->getMail()]);
 
-    //     $resp = ResponseService::getJSONTemplate("success", ["message" => "Veuillez confirmer votre inscription dans votre boîte mail"]);
+        $resp = ResponseService::getJSONTemplate("success", ["message" => "Veuillez confirmer votre inscription dans votre boîte mail"]);
 
-    //     $mailer->send($this->email->createMail("miarantsoasuper3000@gmail.com", EmailSubject::INSCRIPTION->value, $insertedUser->getId()));
+        $mailer->send($this->email->createMail("miarantsoasuper3000@gmail.com", EmailSubject::INSCRIPTION->value, $insertedUser->getId()));
 
-    //     return $this->json($resp);
-    // }
-
-    #[Route("/{id}/update-test", methods: ["POST"])]
-    public function updateUserTest(
-        Request $request,
-        int $id
-    ): JsonResponse {
-        $user = $this->entityManager->getRepository(Utilisateur::class)->find($id);
-        $oldUser = $user->copy();
-
-        $data = $this->userService->updateUserFields($user, json_decode($request->getContent(), true));
-        return $this->json(["newUser" => $data], 200, [], []);
-
+        return $this->json($resp);
     }
 
     #[Route("/{id}/update", methods: ["POST"])]
@@ -125,10 +115,4 @@ class UtilisateurController extends AbstractController
         return $this->json(["updatedFields" => $updatedFields, "user" => $user], 200, [], []);
     }
 
-    #[Route("/haha", methods: ["GET"])]
-    public function testHaha()
-    {
-        $hashedHaha = $this->hasherFactory->hash("haha");
-        return $this->json($hashedHaha);
-    }
 }
