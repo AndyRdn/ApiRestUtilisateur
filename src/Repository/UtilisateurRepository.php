@@ -49,4 +49,23 @@ class UtilisateurRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+    public function findById(string $id): ?Utilisateur
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.id = :id')
+            ->setParameter('id', $id)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+    public function getLastByIdUtilisateur(int $idUtilisateur): ?LoginTentative
+    {
+        return $this->createQueryBuilder('lt')
+            ->join('lt.utilisateur', 'u')
+            ->andWhere('u.id = :idUtilisateur')
+            ->setParameter('idUtilisateur', $idUtilisateur)
+            ->orderBy('lt.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

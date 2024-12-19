@@ -117,3 +117,6 @@ alter table login_tentative
 create unique index uniq_bb5da80cfb88e14f
     on login_tentative (utilisateur_id);
 
+insert into config values (1,'tentative','3');
+insert into config values (2,'delais','90');
+
