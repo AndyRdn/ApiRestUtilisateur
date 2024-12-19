@@ -48,7 +48,6 @@ class UtilisateurController extends AbstractController
         $user->setGenre($jsonData['genre']);
         $user->setDateNaissance(new \DateTimeImmutable($jsonData['dateNaissance']));
         $user->setMdpSimple($jsonData['motDePasse']);
-
         $verif = $jsonData['verification'];
         if ($verif !== $user->getMdpSimple()) {
             $resp = ResponseService::getJSONTemplate("error", [
