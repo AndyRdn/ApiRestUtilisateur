@@ -14,7 +14,8 @@ class UtilisateurService
         $this->passwordHasher = $passwordHasher;
     }
 
-    public function hashPassword(Utilisateur $user) {
+    public function hashPassword(Utilisateur $user)
+    {
         $hashedPassword = $this->passwordHasher->hashPassword($user, $user->getMdpSimple());
         $user->setMotDePasse($hashedPassword);
     }
@@ -26,16 +27,21 @@ class UtilisateurService
         if ($oldUser->getPrenom() !== $newUser->getPrenom()) {
             $updatedFields[] = 'prenom';
         }
+
         if ($oldUser->getNom() !== $newUser->getNom()) {
             $updatedFields[] = 'nom';
         }
+
         if ($oldUser->getDateNaissance() !== $newUser->getDateNaissance()) {
             $updatedFields[] = 'dateNaissance';
         }
+
         if ($oldUser->getGenre() !== $newUser->getGenre()) {
             $updatedFields[] = 'genre';
         }
-        if ($oldUser->getMdpSimple() !== $newUser->getMdpSimple()) {
+
+        $this->hashPassword($newUser);
+        if ($oldUser->getMotDePasse() !== $newUser->getMotDePasse()) {
             $updatedFields[] = 'mdp';
         }
 

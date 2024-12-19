@@ -57,47 +57,40 @@ class UtilisateurController extends AbstractController
         return $this->json("haha", 200, [], []);
     }
 
-    #[Route("/update", methods: ["POST"])]
+    #[Route("/{id}/update", methods: ["POST"])]
     public function updateUser(
         Request $request,
         SerializerInterface $serializer,
+        int $id
     ): JsonResponse {
 
-        $user = new Utilisateur();
-        $user->setId(1);
-        $user->setPrenom("Irina");
-        $user->setNom("Ranaivozanany");
-        $user->setDateNaissance(new \DateTimeImmutable("2005-03-07 18:05:30"));
-        $user->setGenre(0);
-        $user->setMail("irina.elina.r@gmail.com");
-        $user->setMdpSimple("ieol7829");
-        $this->userService->hashPassword($user); // setting the motDePasse field to the hashed version of mdpSimple
-
-        $updatedUser = $user->copy();
+        $user = $this->entityManager->getRepository(Utilisateur::class)->find($id);
+        $oldUser = $user->copy();
         try {
-            $updatedUser = $serializer->deserialize(
+            $user = $serializer->deserialize(
                 $request->getContent(),
                 Utilisateur::class,
                 'json',
-                ['object_to_populate' => $updatedUser, 'groups' => ['update']]
+                ['object_to_populate' => $user, 'groups' => ['update']]
             );
         } catch (\Exception $e) {
             return $this->json(['error' => 'Input invalide'], 400);
         }
 
-        $updatedFields = $this->userService->getUpdatedFields($user, $updatedUser);
+        $updatedFields = $this->userService->getUpdatedFields($oldUser, $user);
 
         $histoUser = new HistoriqueUtilisateur();
-        $histoUser->makeFromUser($updatedUser, new \DateTimeImmutable());
         if (!empty($updatedFields)) {
-            // inserting a new user row for the update (at today's dateTime) in table "historique_utilisateur"
-            // $this->entityManager->persist($histoUser);
-
             // updating the user row in table "utilisateur"
-            // $this->entityManager->persist($updatedUser);
-            // $this->entityManager->flush();
+            $this->entityManager->persist($user);
+
+            // inserting a new user row for the update (at today's dateTime) in table "historique_utilisateur"
+            $histoUser->makeFromUser($user, new \DateTimeImmutable());
+            $this->entityManager->persist($histoUser);
+
+            $this->entityManager->flush();
         }
 
-        return $this->json(["updatedField" => $updatedFields, "newUser" => $updatedUser, "histoUser" => $histoUser], 200, [], []);
+        return $this->json(["updatedFields" => $updatedFields, "user" => $user], 200, [], []);
     }
 }
