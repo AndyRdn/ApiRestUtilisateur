@@ -203,4 +203,24 @@ class Utilisateur
 
         return $newUser;
     }
+
+    /**
+     * Get the value of mdpSimple
+     */ 
+    public function getMdpSimple()
+    {
+        return $this->mdpSimple;
+    }
+
+    /**
+     * Set the value of mdpSimple
+     *
+     * @return  self
+     */ 
+    public function setMdpSimple($mdpSimple)
+    {
+        $this->mdpSimple = $mdpSimple;
+
+        return $this;
+    }
 }
