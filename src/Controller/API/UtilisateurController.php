@@ -4,10 +4,15 @@ namespace App\Controller\API;
 
 use App\Entity\HistoriqueUtilisateur;
 use App\Entity\Utilisateur;
+use App\Entity\InscriptionPending;
 use App\Enum\EmailSubject;
+use App\Repository\InscriptionPendingRepository;
+use App\Repository\UtilisateurRepository;
 use App\Service\EmailService;
 use App\Service\JwtTokenManager;
 use App\Service\UtilisateurService;
+use App\Service\ResponseService;
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -27,6 +32,7 @@ class UtilisateurController extends AbstractController
     private EmailService $email;
     private UtilisateurService $userService;
 
+
     public function __construct(UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $entityManager, JwtTokenManager $tokenManager, EmailService $email, UtilisateurService $userService)
     {
         $this->passwordHasher = $passwordHasher;
@@ -36,25 +42,38 @@ class UtilisateurController extends AbstractController
         $this->userService = $userService;
     }
 
-    #[Route("/signup", name: "signin", methods: ["GET"])]
-    public function signup(MailerInterface $mailer)
-    {
+    #[Route("/signup", name: "signin", methods: ["POST"])]
+    public function signup(MailerInterface $mailer, Request $request, InscriptionPendingRepository $repository): JsonResponse {
+        $jsonData = json_decode($request->getContent(), true);
 
-        //        $hashedPassword = $this->passwordHasher->hashPassword($user, $user->getPlainPassword());
-        //        $user->setMotDePasse($hashedPassword);
+        //setplain password to inscription pending and getmdp sy ny forongony
+        $user = new InscriptionPending();
+        $user->setPrenom($jsonData['prenom']);
+        $user->setNom($jsonData['nom']);
+        $user->setMail($jsonData['mail']);
+        $user->setGenre($jsonData['genre']);
+        $user->setDateNaissance(new \DateTimeImmutable($jsonData['dateNaissance']));
+        $user->setMdpSimple($jsonData['motDePasse']);
+        $verif = $jsonData['verification'];
+        if ($verif !== $user->getMdpSimple()) {
+            $resp = ResponseService::getJSONTemplate("error", [
+                "message" => "Veuillez bien verifier votre mot de passe",
+            ]);
+            return $this->json($resp, 500);
+        }
 
-        $mailer->send($this->email->createMail("irina.elina.r@gmail.com", EmailSubject::AUTHENTIFICATION->value));
-        return $this->json("Email sent", 200, [], []);
-    }
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $user->getMdpSimple());
+        $user->setMotDePasse($hashedPassword);
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
 
-    #[Route("/signin", methods: ["POST"])]
-    public function login(): JsonResponse
-    {
+        $insertedUser = $repository->findOneBy(["mail" => $user->getMail()]);
 
-        //        if ($passwordHasher->isPasswordValid($user, $plainPassword)) {
-        //
-        //        }
-        return $this->json("haha", 200, [], []);
+        $resp = ResponseService::getJSONTemplate("success", ["message" => "Veuillez confirmer votre inscription dans votre boîte mail"]);
+
+        $mailer->send($this->email->createMail("miarantsoasuper3000@gmail.com", EmailSubject::INSCRIPTION->value, $insertedUser->getId()));
+
+        return $this->json($resp);
     }
 
     #[Route("/{id}/update", methods: ["POST"])]

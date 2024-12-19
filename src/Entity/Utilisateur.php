@@ -13,7 +13,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
-class Utilisateur implements PasswordAuthenticatedUserInterface
+class Utilisateur
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -141,23 +141,6 @@ class Utilisateur implements PasswordAuthenticatedUserInterface
         $this->motDePasse = $motDePasse;
 
         return $this;
-    }
-
-    public function getMdpSimple(): ?string
-    {
-        return $this->mdpSimple;
-    }
-
-    public function setMdpSimple(?string $mdpSimple): static
-    {
-        $this->mdpSimple = $mdpSimple;
-
-        return $this;
-    }
-
-    public function getPassword(): ?string
-    {
-        return $this->motDePasse;
     }
 
     public function getTentative(): ?LoginTentative
