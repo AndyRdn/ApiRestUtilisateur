@@ -2,10 +2,20 @@
 
 namespace App\Controller\API;
 
+use App\Entity\DoubleAuthentification;
 use App\Entity\InscriptionPending;
 use App\Entity\Utilisateur;
 use App\Entity\HistoriqueUtilisateur;
 use App\Enum\EmailSubject;
+
+use App\Repository\ConfigRepository;
+use App\Repository\DoubleAuthentificationRepository;
+use App\Repository\InscriptionPendingRepository;
+use App\Repository\LoginTentativeRepository;
+use App\Repository\UtilisateurRepository;
+use App\Service\ConfigService;
+
+
 use App\Service\EmailService;
 use App\Service\JwtTokenManager;
 use App\Service\ResponseService;
@@ -15,12 +25,17 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+
+use function Symfony\Component\Clock\now;
+
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use App\Repository\InscriptionPendingRepository;
+
 
 #[Route("/utilisateur")]
 class UtilisateurController extends AbstractController
@@ -29,19 +44,31 @@ class UtilisateurController extends AbstractController
     private EntityManagerInterface $entityManager;
     private JwtTokenManager $tokenManager;
     private EmailService $email;
+    private EntityManager $em;
+    private $hasherFactory ;
+    private  $utilisateurRepository;
+    private $tentativeRepository;
+    private $configService;
+    private $doubleAuthRepository;
     private UtilisateurService $userService;
     private SerializerInterface $serializer;
-    private $hasherFactory;
 
-    public function __construct(UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $entityManager, JwtTokenManager $tokenManager, EmailService $email, EntityManagerInterface $em, UtilisateurService $userService, SerializerInterface $serializer, PasswordHasherFactoryInterface $hasherFactory)
+    public function __construct(UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $entityManager, JwtTokenManager $tokenManager, EmailService $email, EntityManagerInterface $em, UtilisateurRepository $utilisateurRepository, PasswordHasherFactoryInterface $hasherFactory, LoginTentativeRepository $tentativeRepository, ConfigService $configService, DoubleAuthentificationRepository $doubleAuthRepository)
     {
         $this->passwordHasher = $passwordHasher;
         $this->entityManager = $entityManager;
         $this->tokenManager = $tokenManager;
         $this->email = $email;
+        $this->em = $em;
+        $this->utilisateurRepository=$utilisateurRepository;
+        $this->hasherFactory=$hasherFactory;
+        $this->tentativeRepository=$tentativeRepository;
+        $this->configService=$configService;
+        $this->doubleAuthRepository=$doubleAuthRepository;
         $this->userService = $userService;
         $this->serializer = $serializer;
         $this->hasherFactory = $hasherFactory->getPasswordHasher("plaintext");
+
     }
 
     #[Route("/signup", name: "signin", methods: ["POST"])]
@@ -78,6 +105,61 @@ class UtilisateurController extends AbstractController
 
         return $this->json($resp);
     }
+
+
+    #[Route("/signin", methods: ["POST"])]
+    public function login(MailerInterface $mailer, Request $request): JsonResponse {
+        $jsonData = json_decode($request->getContent(), true);
+        $email=$jsonData['email'];
+        $mdp=$jsonData['mdp'];
+//        dd($email);
+
+        $utilisateur=$this->utilisateurRepository->findByLogin($email);
+//        $hashMdp=$this->hasherFactory->hash('sha256', $mdp);
+
+        $tentative=$this->tentativeRepository->getLastByIdUtilisateur($utilisateur->getId());
+
+        if (strcasecmp($utilisateur->getMotDePasse(),$mdp)===0 && $tentative->getTentative()>0) {
+            $mailer->send($this->email->createMail("andyrdn4@gmail.com", EmailSubject::AUTHENTIFICATION->value, $utilisateur->getId()));
+            return $this->json("Succes", 200, [], []);
+        }else{
+            if ($tentative->getTentative()==0){
+                //cree une email Pour le reset de la tentative
+                return $this->json("Une email de reinitialisation a ete envoyer", 200, [], []);
+            }else{
+                $tentative->setTentative($tentative->getTentative()-1);
+                $this->tentativeRepository->update($tentative);
+                return $this->json("Faild", 200, [], []);
+            }
+
+        }
+//            return $this->json("Faild", 200, [], []);
+
+    }
+
+    #[Route("/confirmation/{id}", methods: ["POST"])]
+    public function checkPin(Request $request, int $id): JsonResponse {
+        $jsonData = json_decode($request->getContent(), true);
+        $code=$jsonData['code'];
+        $refDelais=$this->configService->getDelaisRef();
+        $doubleAuth=$this->doubleAuthRepository->findValidCodeByUtilisateur($id,$refDelais);
+        $refTentative=$this->configService->getTentativeRef();
+        $tentative=$this->tentativeRepository->getLastByIdUtilisateur($id);
+//        dd($doubleAuth->getCode());
+        if ($doubleAuth != null && $doubleAuth->getCode()==$code && $tentative->getTentative()>0){
+            $tentative->setTentative($refTentative);
+            $this->tentativeRepository->update($tentative);
+            return $this->json("Token Behhh", 200, [], []);
+        }else{
+            if ($tentative->getTentative()==0){
+                //cree une email Pour le reset de la tentative
+                return $this->json("Une email de reinitialisation a ete envoyer", 200, [], []);
+            }else{
+                $tentative->setTentative($tentative->getTentative()-1);
+                $this->tentativeRepository->update($tentative);
+                return $this->json("Faild", 200, [], []);
+            }
+        }
 
     #[Route("/{id}/update", methods: ["POST"])]
     public function updateUser(
@@ -118,6 +200,7 @@ class UtilisateurController extends AbstractController
         $resp = ResponseService::getJSONTemplate("success", ["message" => $message]);
 
         return $this->json($resp);
+
     }
 
 }
