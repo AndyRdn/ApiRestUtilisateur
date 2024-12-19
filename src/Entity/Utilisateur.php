@@ -179,4 +179,5 @@ class Utilisateur
 
         return $this;
     }
+
 }
