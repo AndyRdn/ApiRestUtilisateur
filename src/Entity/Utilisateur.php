@@ -198,4 +198,5 @@ class Utilisateur implements PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
 }
