@@ -8,6 +8,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
+
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
 class Utilisateur
@@ -18,15 +20,19 @@ class Utilisateur
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['update'])]
     private ?string $prenom = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['update'])]
     private ?string $nom = null;
 
     #[ORM\Column]
+    #[Groups(['update'])]
     private ?\DateTimeImmutable $dateNaissance = null;
 
     #[ORM\Column]
+    #[Groups(['update'])]
     private ?int $genre = null;
 
     #[ORM\Column(length: 255)]
@@ -34,6 +40,9 @@ class Utilisateur
 
     #[ORM\Column(length: 255)]
     private ?string $motDePasse = null;
+
+    #[Groups(['update'])]
+    private ?string $mdpSimple;
 
     #[ORM\OneToOne(mappedBy: 'utilisateur', cascade: ['persist', 'remove'])]
     private ?LoginTentative $tentative = null;
@@ -180,4 +189,29 @@ class Utilisateur
         return $this;
     }
 
+    public function getMdpSimple()
+    {
+        return $this->mdpSimple;
+    }
+
+    public function setMdpSimple($mdpSimple)
+    {
+        $this->mdpSimple = $mdpSimple;
+
+        return $this;
+    }
+
+    public function copy(): Utilisateur
+    {
+        $newUser = new Utilisateur();
+        $newUser->setId($this->getId());
+        $newUser->setPrenom($this->getPrenom());
+        $newUser->setNom($this->getNom());
+        $newUser->setDateNaissance($this->getDateNaissance());
+        $newUser->setGenre($this->getGenre());
+        $newUser->setMail($this->getMail());
+        $newUser->setMotDePasse($this->getMotDePasse());
+
+        return $newUser;
+    }
 }
