@@ -2,11 +2,13 @@
 
 namespace App\Entity;
 
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+
 use App\Repository\InscriptionPendingRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: InscriptionPendingRepository::class)]
-class InscriptionPending
+class InscriptionPending implements PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -30,6 +32,9 @@ class InscriptionPending
 
     #[ORM\Column(length: 255)]
     private ?string $motDePasse = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $mdpSimple = null;
 
     public function getId(): ?int
     {
@@ -113,5 +118,30 @@ class InscriptionPending
         $this->motDePasse = $motDePasse;
 
         return $this;
+    }
+
+    /**
+     * Get the value of mdpSimple
+     */
+    public function getMdpSimple()
+    {
+        return $this->mdpSimple;
+    }
+
+    /**
+     * Set the value of mdpSimple
+     *
+     * @return  self
+     */
+    public function setMdpSimple($mdpSimple)
+    {
+        $this->mdpSimple = $mdpSimple;
+
+        return $this;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->getMotDePasse();
     }
 }
