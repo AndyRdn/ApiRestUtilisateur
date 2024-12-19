@@ -31,7 +31,7 @@ class EmailService
     }
 
 
-    public function createMail(string $recept, string $subject) {
+    public function createMail(string $recept, string $subject, int $uid) {
         $pathToTemplate = "";
         $misy = -1;
         for($i = 0; $i < count($this->subject); $i++) {
