@@ -4,8 +4,9 @@ namespace App\Controller\API;
 
 use App\Entity\DoubleAuthentification;
 use App\Entity\InscriptionPending;
-use App\Entity\Utilisateur;
 use App\Entity\HistoriqueUtilisateur;
+use App\Entity\LoginTentative;
+use App\Entity\Utilisateur;
 use App\Enum\EmailSubject;
 
 use App\Repository\ConfigRepository;
@@ -23,10 +24,12 @@ use App\Service\UtilisateurService;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\PasswordHasher\PasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use function Symfony\Component\Clock\now;
 use Symfony\Component\HttpFoundation\Request;
@@ -73,7 +76,6 @@ class UtilisateurController extends AbstractController
     {
         $jsonData = json_decode($request->getContent(), true);
 
-        //setplain password to inscription pending and getmdp sy ny forongony
         $user = new InscriptionPending();
         $user->setPrenom($jsonData['prenom']);
         $user->setNom($jsonData['nom']);
@@ -81,6 +83,14 @@ class UtilisateurController extends AbstractController
         $user->setGenre($jsonData['genre']);
         $user->setDateNaissance(new \DateTimeImmutable($jsonData['dateNaissance']));
         $user->setMdpSimple($jsonData['motDePasse']);
+        $verifUser = $repository->findOneBy(["mail" => $user->getMail()]);
+        if ($verifUser !== null) {
+            $resp = ResponseService::getJSONTemplate("error", [
+                "message" => "Email déjà inscrit",
+            ]);
+            return $this->json($resp, 500);
+        }
+
         $verif = $jsonData['verification'];
         if ($verif !== $user->getMdpSimple()) {
             $resp = ResponseService::getJSONTemplate("error", [
@@ -101,6 +111,48 @@ class UtilisateurController extends AbstractController
         $mailer->send($this->email->createMail("miarantsoasuper3000@gmail.com", EmailSubject::INSCRIPTION->value, $insertedUser->getId()));
 
         return $this->json($resp);
+    }
+
+    #[Route("/signup/verification/{id}", methods: ["GET"])]
+    public function signupValidation(int $id, InscriptionPendingRepository $repository, UtilisateurRepository $utilisateurRepository, LoginTentativeRepository $tentativeRepository): JsonResponse {
+        $user = $repository->find($id);
+        $verif = $utilisateurRepository->findOneBy(["mail" => $user->getMail()]);
+        if ($verif !== null) {
+            $resp = ResponseService::getJSONTemplate("error", ["message" => "Utilisateur déjà inscrit, votre lien n'est plus valide"]);
+            return $this->json($resp, 500);
+        }
+
+        if ($user === null) {
+            $resp = ResponseService::getJSONTemplate("error", ["message" => "Inscription inexistant, veuillez bien verifier votre lien"]);
+            return $this->json($resp, 500);
+        }
+
+        $utilisateur = new Utilisateur();
+        $utilisateur->setNom($user->getNom());
+        $utilisateur->setPrenom($user->getPrenom());
+        $utilisateur->setDateNaissance($user->getDateNaissance());
+        $utilisateur->setGenre($user->getGenre());
+        $utilisateur->setMail($user->getMail());
+        $utilisateur->setMotDePasse($user->getMotDePasse());
+        $this->em->persist($utilisateur);
+        $this->em->flush();
+
+        $lastUser = $utilisateurRepository->findOneBy(["mail" => $user->getMail()]);
+        $tentative = new LoginTentative();
+        $tentative->setUtilisateur($lastUser);
+        $tentative->setTentative(3);
+        $this->em->persist($tentative);
+        $this->em->flush();
+
+        $resp = ResponseService::getJSONTemplate("success", [
+            "message" => "Inscription validé, bienvenue parmis nous",
+            "data" => $lastUser,
+        ]);
+
+//        dd($resp);
+        return $this->json($resp, 200, [], [
+            'groups' => ['utilisateur.info']
+        ]);
     }
 
 

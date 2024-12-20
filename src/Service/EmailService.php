@@ -47,7 +47,7 @@ class EmailService
         ]);
 
         $email = (new Email())
-            ->from('andyrdn04@gmail.com')
+            ->from('Connectify <andyrdn04@gmail.com>')
             ->to($recept)
             ->subject($subject)
             ->html($html);
