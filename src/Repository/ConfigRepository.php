@@ -21,4 +21,13 @@ class ConfigRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    public function update(Config $config, bool $flush = true): void
+    {
+        $this->getEntityManager()->persist($config);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
 }
