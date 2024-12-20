@@ -10,7 +10,6 @@ use App\Service\EmailService;
 use App\Service\JwtTokenManager;
 use App\Service\ResponseService;
 use App\Service\UtilisateurService;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -79,7 +78,7 @@ class UtilisateurController extends AbstractController
         return $this->json($resp);
     }
 
-    #[Route("/{id}/update", methods: ["POST"])]
+    #[Route("/update/{id}", methods: ["POST"])]
     public function updateUser(
         Request $request,
         int $id
