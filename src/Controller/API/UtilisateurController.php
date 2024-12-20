@@ -61,7 +61,7 @@ class UtilisateurController extends AbstractController
         $this->email = $email;
         $this->em = $em;
         $this->utilisateurRepository=$utilisateurRepository;
-        $this->hasherFactory=$hasherFactory;
+//        $this->hasherFactory=$hasherFactory;
         $this->tentativeRepository=$tentativeRepository;
         $this->configService=$configService;
         $this->doubleAuthRepository=$doubleAuthRepository;
@@ -99,7 +99,8 @@ class UtilisateurController extends AbstractController
             return $this->json($resp, 500);
         }
 
-        $hashedPassword = $this->passwordHasher->hashPassword($user, $user->getMdpSimple());
+//        $hashedPassword = $this->passwordHasher->hashPassword($user, $user->getMdpSimple());
+        $hashedPassword = hash("sha256", $user->getMdpSimple());
         $user->setMotDePasse($hashedPassword);
         $this->entityManager->persist($user);
         $this->entityManager->flush();
@@ -137,6 +138,11 @@ class UtilisateurController extends AbstractController
         $this->em->persist($utilisateur);
         $this->em->flush();
 
+        $histoUser = new HistoriqueUtilisateur();
+        $histoUser->makeFromUser($utilisateur, new \DateTimeImmutable());
+        $this->em->persist($histoUser);
+        $this->em->flush();
+
         $lastUser = $utilisateurRepository->findOneBy(["mail" => $user->getMail()]);
         $tentative = new LoginTentative();
         $tentative->setUtilisateur($lastUser);
@@ -161,15 +167,17 @@ class UtilisateurController extends AbstractController
         $jsonData = json_decode($request->getContent(), true);
         $email=$jsonData['email'];
         $mdp=$jsonData['mdp'];
-//        dd($email);
+//        dd($mdp);
 
         $utilisateur=$this->utilisateurRepository->findByLogin($email);
-//        $hashMdp=$this->hasherFactory->hash('sha256', $mdp);
-
+        $hashMdp=hash("sha256", $mdp);
+//        dd($hashMdp);
         $tentative=$this->tentativeRepository->getLastByIdUtilisateur($utilisateur->getId());
 //      check Email sy MDP sy Tentative
-        if (strcasecmp($utilisateur->getMotDePasse(),$mdp)===0 && $tentative->getTentative()>0) {
+
+        if (strcasecmp($utilisateur->getMotDePasse(),$hashMdp)===0 && $tentative->getTentative()>0) {
             $mailer->send($this->email->createMail($utilisateur->getMail(), EmailSubject::AUTHENTIFICATION->value, $utilisateur->getId()));
+
             return $this->json("Succes", 200, [], []);
         }else{
 //          check si

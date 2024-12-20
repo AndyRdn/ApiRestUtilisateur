@@ -17,7 +17,7 @@ class UtilisateurService
 
     public function hashPassword(Utilisateur $user)
     {
-        $hashedPassword = $this->hasherFactory->hash($user->getMdpSimple());
+        $hashedPassword = hash("sha256", $user->getMdpSimple());
         $user->setMotDePasse($hashedPassword);
     }
 

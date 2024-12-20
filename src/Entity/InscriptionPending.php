@@ -33,7 +33,6 @@ class InscriptionPending implements PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private ?string $motDePasse = null;
 
-    #[ORM\Column(length: 255)]
     private ?string $mdpSimple = null;
 
     public function getId(): ?int
