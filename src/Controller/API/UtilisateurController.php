@@ -188,7 +188,7 @@ class UtilisateurController extends AbstractController
 
     }
 
-    #[Route("/confirmation/{id}", methods: ["POST"])]
+    #[Route("/signin/confirmation/{id}", methods: ["POST"])]
     public function checkPin(Request $request, int $id, MailerInterface $mailer): JsonResponse
     {
         $jsonData = json_decode($request->getContent(), true);
