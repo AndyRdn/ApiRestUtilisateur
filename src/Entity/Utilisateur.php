@@ -8,9 +8,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
-class Utilisateur
+class Utilisateur implements \JsonSerializable
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -18,18 +19,23 @@ class Utilisateur
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["utilisateur.info"])]
     private ?string $prenom = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["utilisateur.info"])]
     private ?string $nom = null;
 
     #[ORM\Column]
+    #[Groups(["utilisateur.info"])]
     private ?\DateTimeImmutable $dateNaissance = null;
 
     #[ORM\Column]
+    #[Groups(["utilisateur.info"])]
     private ?int $genre = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["utilisateur.info"])]
     private ?string $mail = null;
 
     #[ORM\Column(length: 255)]
@@ -178,5 +184,17 @@ class Utilisateur
         }
 
         return $this;
+    }
+
+    public function jsonSerialize(): mixed
+    {
+        return [
+            "id" => $this->id,
+            "nom" => $this->nom,
+            "prenom" => $this->prenom,
+            "dateNaissance" => $this->dateNaissance,
+            "genre" => $this->genre,
+            "mail" => $this->mail,
+        ];
     }
 }
