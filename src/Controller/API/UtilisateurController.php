@@ -108,7 +108,7 @@ class UtilisateurController extends AbstractController
 
         $resp = ResponseService::getJSONTemplate("success", ["message" => "Veuillez confirmer votre inscription dans votre boîte mail"]);
 
-        $mailer->send($this->email->createMail("miarantsoasuper3000@gmail.com", EmailSubject::INSCRIPTION->value, $insertedUser->getId()));
+        $mailer->send($this->email->createMail( $insertedUser->getMail(), EmailSubject::INSCRIPTION->value, $insertedUser->getId()));
 
         return $this->json($resp);
     }
@@ -169,13 +169,13 @@ class UtilisateurController extends AbstractController
         $tentative=$this->tentativeRepository->getLastByIdUtilisateur($utilisateur->getId());
 //      check Email sy MDP sy Tentative
         if (strcasecmp($utilisateur->getMotDePasse(),$mdp)===0 && $tentative->getTentative()>0) {
-            $mailer->send($this->email->createMail("andyrdn4@gmail.com", EmailSubject::AUTHENTIFICATION->value, $utilisateur->getId()));
+            $mailer->send($this->email->createMail($utilisateur->getMail(), EmailSubject::AUTHENTIFICATION->value, $utilisateur->getId()));
             return $this->json("Succes", 200, [], []);
         }else{
 //          check si
             if ($tentative->getTentative()==0){
                 //cree une email Pour le reset de la tentative
-                $mailer->send($this->email->createMail("andyrdn4@gmail.com", EmailSubject::RESET->value, $utilisateur->getId()));
+                $mailer->send($this->email->createMail($utilisateur->getMail(), EmailSubject::RESET->value, $utilisateur->getId()));
                 return $this->json("Une email de reinitialisation a ete envoyer", 200, [], []);
             }else{
                 $tentative->setTentative($tentative->getTentative()-1);
@@ -198,6 +198,7 @@ class UtilisateurController extends AbstractController
         $refTentative = $this->configService->getTentativeRef();
         $tentative = $this->tentativeRepository->getLastByIdUtilisateur($id);
 //        dd($doubleAuth->getCode());
+        $utilisateur=$this->utilisateurRepository->findById($id);
         if ($doubleAuth != null && $doubleAuth->getCode() == $code && $tentative->getTentative() > 0) {
             $tentative->setTentative($refTentative);
             $this->tentativeRepository->update($tentative);
@@ -205,7 +206,7 @@ class UtilisateurController extends AbstractController
         } else {
             if ($tentative->getTentative() == 0) {
                 //cree une email Pour le reset de la tentative
-                $mailer->send($this->email->createMail("andyrdn4@gmail.com", EmailSubject::RESET->value, $id));
+                $mailer->send($this->email->createMail($utilisateur->getMail(), EmailSubject::RESET->value, $id));
                 return $this->json("Une email de reinitialisation a ete envoyer", 200, [], []);
             } else {
                 $tentative->setTentative($tentative->getTentative() - 1);
