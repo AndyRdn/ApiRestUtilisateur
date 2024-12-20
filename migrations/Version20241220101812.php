@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20241219204840 extends AbstractMigration
+final class Version20241220101812 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -20,15 +20,14 @@ final class Version20241219204840 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE SEQUENCE config_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
-        $this->addSql('CREATE TABLE config (id INT NOT NULL, nom VARCHAR(255) NOT NULL, valeur VARCHAR(255) NOT NULL, PRIMARY KEY(id))');
+        $this->addSql('ALTER TABLE token_utilisateur ADD updated_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL');
+        $this->addSql('COMMENT ON COLUMN token_utilisateur.updated_at IS \'(DC2Type:datetime_immutable)\'');
     }
 
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
         $this->addSql('CREATE SCHEMA public');
-        $this->addSql('DROP SEQUENCE config_id_seq CASCADE');
-        $this->addSql('DROP TABLE config');
+        $this->addSql('ALTER TABLE token_utilisateur DROP updated_at');
     }
 }

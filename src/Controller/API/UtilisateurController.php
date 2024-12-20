@@ -6,6 +6,7 @@ use App\Entity\DoubleAuthentification;
 use App\Entity\InscriptionPending;
 use App\Entity\HistoriqueUtilisateur;
 use App\Entity\LoginTentative;
+use App\Entity\TokenUtilisateur;
 use App\Entity\Utilisateur;
 use App\Enum\EmailSubject;
 
@@ -13,6 +14,7 @@ use App\Repository\ConfigRepository;
 use App\Repository\DoubleAuthentificationRepository;
 use App\Repository\InscriptionPendingRepository;
 use App\Repository\LoginTentativeRepository;
+use App\Repository\TokenUtilisateurRepository;
 use App\Repository\UtilisateurRepository;
 use App\Service\ConfigService;
 
@@ -151,14 +153,11 @@ class UtilisateurController extends AbstractController
         $this->em->flush();
 
         $resp = ResponseService::getJSONTemplate("success", [
-            "message" => "Inscription validé, bienvenue parmis nous",
-            "data" => $lastUser,
+            "message" => "Inscription validée, bienvenue parmis nous. veuillez vous connectez",
         ]);
 
 //        dd($resp);
-        return $this->json($resp, 200, [], [
-            'groups' => ['utilisateur.info']
-        ]);
+        return $this->json($resp);
     }
 
 
@@ -176,9 +175,16 @@ class UtilisateurController extends AbstractController
 //      check Email sy MDP sy Tentative
 
         if (strcasecmp($utilisateur->getMotDePasse(),$hashMdp)===0 && $tentative->getTentative()>0) {
-            $mailer->send($this->email->createMail($utilisateur->getMail(), EmailSubject::AUTHENTIFICATION->value, $utilisateur->getId()));
+            //check si un code est deja envoyer
+            $code=$this->doubleAuthRepository->findValidCodeByUtilisateur($utilisateur->getId(),$this->configService->getDelaisRef());
+            if ($code== null){
+                $mailer->send($this->email->createMail($utilisateur->getMail(), EmailSubject::AUTHENTIFICATION->value, $utilisateur->getId()));
+                return $this->json("Un email de confirmation a ete envoyer", 200, [], []);
+            }else{
+                return $this->json("Le code emvoyer precedement est encore valide",200,[],[]);
+            }
 
-            return $this->json("Succes", 200, [], []);
+
         }else{
 //          check si
             if ($tentative->getTentative()==0){
@@ -188,16 +194,14 @@ class UtilisateurController extends AbstractController
             }else{
                 $tentative->setTentative($tentative->getTentative()-1);
                 $this->tentativeRepository->update($tentative);
-                return $this->json("Faild", 200, [], []);
+                return $this->json("Mot de passe Incorrecte . Tentative restante :".$tentative->getTentative(), 500, [], []);
             }
 
         }
-//            return $this->json("Faild", 200, [], []);
-
     }
 
     #[Route("/signin/confirmation/{id}", methods: ["POST"])]
-    public function checkPin(Request $request, int $id, MailerInterface $mailer): JsonResponse
+    public function checkPin(EntityManager $em, Request $request, int $id, MailerInterface $mailer, UtilisateurRepository $repository, TokenUtilisateurRepository $tokenRepo): JsonResponse
     {
         $jsonData = json_decode($request->getContent(), true);
         $code = $jsonData['code'];
@@ -205,12 +209,30 @@ class UtilisateurController extends AbstractController
         $doubleAuth = $this->doubleAuthRepository->findValidCodeByUtilisateur($id, $refDelais);
         $refTentative = $this->configService->getTentativeRef();
         $tentative = $this->tentativeRepository->getLastByIdUtilisateur($id);
-//        dd($doubleAuth->getCode());
         $utilisateur=$this->utilisateurRepository->findById($id);
         if ($doubleAuth != null && $doubleAuth->getCode() == $code && $tentative->getTentative() > 0) {
             $tentative->setTentative($refTentative);
             $this->tentativeRepository->update($tentative);
-            return $this->json("Token Behhh", 200, [], []);
+            $claims = [
+                'mail' => $jsonData['email']
+            ];
+            $user = $repository->findOneBy(['mail' => $jsonData['email']]);
+            $token = $this->tokenManager->createToken($claims, 1);
+            $tokenUtilisateur = new TokenUtilisateur();
+            $tokenUtilisateur->setUtilisateur($user);
+            $tokenUtilisateur->setToken($token);
+            $verif = $tokenRepo->findOneBy(['utilisateur' => $tokenUtilisateur->getUtilisateur()]);
+            if ($verif === null) {
+                
+            }
+            $em->persist($verif);
+            $em->flush();
+
+            $resp = ResponseService::getJSONTemplate('success', [
+                "message"  => "Delais de token changee avec succes",
+                "data" => $token;
+            ]);
+            return $this->json($resp);
         } else {
             if ($tentative->getTentative() == 0) {
                 //cree une email Pour le reset de la tentative
@@ -219,7 +241,7 @@ class UtilisateurController extends AbstractController
             } else {
                 $tentative->setTentative($tentative->getTentative() - 1);
                 $this->tentativeRepository->update($tentative);
-                return $this->json("Faild", 200, [], []);
+                return $this->json("Code Pin invalide", 500, [], []);
             }
         }
     }
