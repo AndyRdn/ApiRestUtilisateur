@@ -115,13 +115,15 @@ class UtilisateurController extends AbstractController
 //        $hashMdp=$this->hasherFactory->hash('sha256', $mdp);
 
         $tentative=$this->tentativeRepository->getLastByIdUtilisateur($utilisateur->getId());
-
+//      check Email sy MDP sy Tentative
         if (strcasecmp($utilisateur->getMotDePasse(),$mdp)===0 && $tentative->getTentative()>0) {
             $mailer->send($this->email->createMail("andyrdn4@gmail.com", EmailSubject::AUTHENTIFICATION->value, $utilisateur->getId()));
             return $this->json("Succes", 200, [], []);
         }else{
+//          check si
             if ($tentative->getTentative()==0){
                 //cree une email Pour le reset de la tentative
+                $mailer->send($this->email->createMail("andyrdn4@gmail.com", EmailSubject::RESET->value, $utilisateur->getId()));
                 return $this->json("Une email de reinitialisation a ete envoyer", 200, [], []);
             }else{
                 $tentative->setTentative($tentative->getTentative()-1);
@@ -135,7 +137,7 @@ class UtilisateurController extends AbstractController
     }
 
     #[Route("/confirmation/{id}", methods: ["POST"])]
-    public function checkPin(Request $request, int $id): JsonResponse
+    public function checkPin(Request $request, int $id, MailerInterface $mailer): JsonResponse
     {
         $jsonData = json_decode($request->getContent(), true);
         $code = $jsonData['code'];
@@ -151,6 +153,7 @@ class UtilisateurController extends AbstractController
         } else {
             if ($tentative->getTentative() == 0) {
                 //cree une email Pour le reset de la tentative
+                $mailer->send($this->email->createMail("andyrdn4@gmail.com", EmailSubject::RESET->value, $id));
                 return $this->json("Une email de reinitialisation a ete envoyer", 200, [], []);
             } else {
                 $tentative->setTentative($tentative->getTentative() - 1);
@@ -199,6 +202,16 @@ class UtilisateurController extends AbstractController
         $resp = ResponseService::getJSONTemplate("success", ["message" => $message]);
 
         return $this->json($resp);
+
+    }
+
+    #[Route("/resetTentative/{id}", methods: ["GET"])]
+    public function resetTentative(int $id)
+    {
+        $logTentative=$this->tentativeRepository->getLastByIdUtilisateur($id);
+        $logTentative->setTentative($this->configService->getTentativeRef());
+        $this->tentativeRepository->update($logTentative);
+        return $this->json("Tentative Reinitialiser avec succes", 200, [], []);
 
     }
 
