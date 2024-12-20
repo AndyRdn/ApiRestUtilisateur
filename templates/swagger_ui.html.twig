@@ -24,7 +24,7 @@
     <script>
         window.onload = () => {
             SwaggerUIBundle({
-                url: "/api-doc.yaml", // Chemin vers le fichier YAML
+                url: "{{ absolute_url(asset('api-doc.yaml')) }}", // Utilise le chemin absolu généré par Symfony
                 dom_id: '#swagger-ui',
                 deepLinking: true,
                 presets: [
