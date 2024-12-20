@@ -7,7 +7,7 @@ nelmio_api_doc:
             info:
                 title: ApiRestUtilisateur
                 version: 1.0.0
-            host: localhost:8000
+            host: localhost:8089
             basePath: /api
         paths:
             '%kernel.project_dir%/src/Controller':

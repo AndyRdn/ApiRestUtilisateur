@@ -3,7 +3,7 @@ info:
   title: 'My API Documentation'
   version: '1.0'
 paths:
-  'D:\ApiRestUtilisateur/src/Controller': {  }
+  'C:\Users\Tsinjoniaina\Downloads\ITU\S5\Programmation\Web\Projet\projet-S5\ApiRestUtilisateur\ApiRestUtilisateur/src/Controller': {  }
   '/_error/{code}':
     get:
       operationId: get__preview_error
@@ -106,6 +106,12 @@ paths:
           schema:
             type: string
             pattern: \d+
+      responses:
+        default:
+          description: ''
+  /api/doc:
+    get:
+      operationId: get_apiDoc
       responses:
         default:
           description: ''
