@@ -28,7 +28,7 @@ class ConfigController extends AbstractController
 
     }
 
-    #[Route("delais/{value}", methods: ["GET"])]
+    #[Route("/delais/{value}", methods: ["GET"])]
     public function updatedelais($value)
     {
         $config=$this->configRepository->findByNom("delais");
