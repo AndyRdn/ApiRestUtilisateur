@@ -23,7 +23,7 @@ class JwtTokenManager
         );
     }
 
-    public function createToken(array $claims, int $expirationInSeconds): Token
+    public function createToken(array $claims, int $expirationInSeconds): String
     {
         $now = new \DateTimeImmutable();
         $builder = $this->config->builder()
@@ -36,7 +36,7 @@ class JwtTokenManager
             $builder->withClaim($key, $value);
         }
 
-        return $builder->getToken($this->config->signer(), $this->config->signingKey());
+        return $builder->getToken($this->config->signer(), $this->config->signingKey())->toString();
     }
 
     public function validateToken(Token $token): bool
