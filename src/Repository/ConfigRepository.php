@@ -30,4 +30,6 @@ class ConfigRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+
 }

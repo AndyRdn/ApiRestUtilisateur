@@ -6,6 +6,7 @@ use App\Entity\DoubleAuthentification;
 use App\Entity\InscriptionPending;
 use App\Entity\HistoriqueUtilisateur;
 use App\Entity\LoginTentative;
+use App\Entity\TokenUtilisateur;
 use App\Entity\Utilisateur;
 use App\Enum\EmailSubject;
 
@@ -13,6 +14,7 @@ use App\Repository\ConfigRepository;
 use App\Repository\DoubleAuthentificationRepository;
 use App\Repository\InscriptionPendingRepository;
 use App\Repository\LoginTentativeRepository;
+use App\Repository\TokenUtilisateurRepository;
 use App\Repository\UtilisateurRepository;
 use App\Service\ConfigService;
 
@@ -23,6 +25,7 @@ use App\Service\ResponseService;
 use App\Service\UtilisateurService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityManager;
+use PhpParser\Node\Stmt\TryCatch;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -34,8 +37,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use function Symfony\Component\Clock\now;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\SerializerInterface;
-
-
+use Symfony\Component\Validator\Constraints\Json;
 
 #[Route("/utilisateur")]
 class UtilisateurController extends AbstractController
@@ -103,15 +105,26 @@ class UtilisateurController extends AbstractController
         $hashedPassword = hash("sha256", $user->getMdpSimple());
         $user->setMotDePasse($hashedPassword);
         $this->entityManager->persist($user);
-        $this->entityManager->flush();
+        try {
+            $this->entityManager->beginTransaction();
+            $this->entityManager->flush();
+    
+    
+            $insertedUser = $repository->findOneBy(["mail" => $user->getMail()]);
+    
+            $resp = ResponseService::getJSONTemplate("success", ["message" => "Veuillez confirmer votre inscription dans votre boîte mail"]);
+    
+            $mailer->send($this->email->createMail( $insertedUser->getMail(), EmailSubject::INSCRIPTION->value, $insertedUser->getId()));
+            $this->entityManager->commit();
+    
+            return $this->json($resp);
+        } catch (\Throwable $th) {
+            $resp = ResponseService::getJSONTemplate("error", ["message" => "Une erreur s'est déroulé durant le processus, veuillez réessayer"]);
 
-        $insertedUser = $repository->findOneBy(["mail" => $user->getMail()]);
+            $this->entityManager->rollback();
+            return $this->json($resp);
+        }
 
-        $resp = ResponseService::getJSONTemplate("success", ["message" => "Veuillez confirmer votre inscription dans votre boîte mail"]);
-
-        $mailer->send($this->email->createMail( $insertedUser->getMail(), EmailSubject::INSCRIPTION->value, $insertedUser->getId()));
-
-        return $this->json($resp);
     }
 
     #[Route("/signup/verification/{id}", methods: ["GET"])]
@@ -151,14 +164,11 @@ class UtilisateurController extends AbstractController
         $this->em->flush();
 
         $resp = ResponseService::getJSONTemplate("success", [
-            "message" => "Inscription validé, bienvenue parmis nous",
-            "data" => $lastUser,
+            "message" => "Inscription validée, bienvenue parmis nous. veuillez vous connectez",
         ]);
 
 //        dd($resp);
-        return $this->json($resp, 200, [], [
-            'groups' => ['utilisateur.info']
-        ]);
+        return $this->json($resp);
     }
 
 
@@ -176,28 +186,45 @@ class UtilisateurController extends AbstractController
 //      check Email sy MDP sy Tentative
 
         if (strcasecmp($utilisateur->getMotDePasse(),$hashMdp)===0 && $tentative->getTentative()>0) {
-            $mailer->send($this->email->createMail($utilisateur->getMail(), EmailSubject::AUTHENTIFICATION->value, $utilisateur->getId()));
+            //check si un code est deja envoyer
+            $code=$this->doubleAuthRepository->findValidCodeByUtilisateur($utilisateur->getId(),$this->configService->getDelaisRef());
+            if ($code== null){
+                $mailer->send($this->email->createMail($utilisateur->getMail(), EmailSubject::AUTHENTIFICATION->value, $utilisateur->getId()));
+                $resp = ResponseService::getJSONTemplate('success', [
+                    "message"  => "Un email de confirmation a ete envoyé"
+                ]);
+                return $this->json($resp, 200, [], []);
+            }else{
+                $resp = ResponseService::getJSONTemplate('error', [
+                    "message"  => "Le code envoyer précédement est encore valide"
+                ]);
+                return $this->json($resp, 200, [], []);
+            }
 
-            return $this->json("Succes", 200, [], []);
+
         }else{
 //          check si
             if ($tentative->getTentative()==0){
                 //cree une email Pour le reset de la tentative
                 $mailer->send($this->email->createMail($utilisateur->getMail(), EmailSubject::RESET->value, $utilisateur->getId()));
-                return $this->json("Une email de reinitialisation a ete envoyer", 200, [], []);
+                $resp = ResponseService::getJSONTemplate('error', [
+                    "message"  => "Un email de réinitialisation a été envoyé"
+                ]);
+                return $this->json($resp, 500);
             }else{
                 $tentative->setTentative($tentative->getTentative()-1);
                 $this->tentativeRepository->update($tentative);
-                return $this->json("Faild", 200, [], []);
+                $resp = ResponseService::getJSONTemplate('error', [
+                    "message"  => "Mot de passe Incorrecte . Tentative restante :".$tentative->getTentative()
+                ]);
+                return $this->json($resp, 500, [], []);
             }
 
         }
-//            return $this->json("Faild", 200, [], []);
-
     }
 
     #[Route("/signin/confirmation/{id}", methods: ["POST"])]
-    public function checkPin(Request $request, int $id, MailerInterface $mailer): JsonResponse
+    public function checkPin(Request $request, int $id, MailerInterface $mailer, UtilisateurRepository $repository, TokenUtilisateurRepository $tokenRepo): JsonResponse
     {
         $jsonData = json_decode($request->getContent(), true);
         $code = $jsonData['code'];
@@ -205,21 +232,50 @@ class UtilisateurController extends AbstractController
         $doubleAuth = $this->doubleAuthRepository->findValidCodeByUtilisateur($id, $refDelais);
         $refTentative = $this->configService->getTentativeRef();
         $tentative = $this->tentativeRepository->getLastByIdUtilisateur($id);
-//        dd($doubleAuth->getCode());
         $utilisateur=$this->utilisateurRepository->findById($id);
         if ($doubleAuth != null && $doubleAuth->getCode() == $code && $tentative->getTentative() > 0) {
             $tentative->setTentative($refTentative);
             $this->tentativeRepository->update($tentative);
-            return $this->json("Token Behhh", 200, [], []);
+            $claims = [
+                // 'mail' => $jsonData['email']
+            ];
+
+            $user = $repository->findOneBy(['id' => $id]);
+            $token = $this->tokenManager->createToken($claims, 1);
+            $tokenUtilisateur = new TokenUtilisateur();
+            $tokenUtilisateur->setUtilisateur($user);
+            $tokenUtilisateur->setToken($token);
+            $tokenUtilisateur->setUpdatedAt(new \DateTimeImmutable());
+            $verif = $tokenRepo->findOneBy(['utilisateur' => $tokenUtilisateur->getUtilisateur()]);
+            if ($verif === null) {
+                $this->em->persist($tokenUtilisateur);
+            } else {
+                $verif->setToken($tokenUtilisateur->getToken());
+                $verif->setUpdatedAt(new \DateTimeImmutable());
+                $this->em->persist($verif);
+            }
+            $this->em->flush();
+            
+            $resp = ResponseService::getJSONTemplate('success', [
+                "message"  => "Connecté(e) avec succès",
+                "data" => $token
+            ]);
+            return $this->json($resp);
         } else {
             if ($tentative->getTentative() == 0) {
                 //cree une email Pour le reset de la tentative
                 $mailer->send($this->email->createMail($utilisateur->getMail(), EmailSubject::RESET->value, $id));
-                return $this->json("Une email de reinitialisation a ete envoyer", 200, [], []);
+                $resp = ResponseService::getJSONTemplate('error', [
+                    "message"  => "Un email de réinitialisation a été envoyé"
+                ]);
+                return $this->json($resp);
             } else {
                 $tentative->setTentative($tentative->getTentative() - 1);
                 $this->tentativeRepository->update($tentative);
-                return $this->json("Faild", 200, [], []);
+                $resp = ResponseService::getJSONTemplate('error', [
+                    "message"  => "Code PIN invalide"
+                ]);
+                return $this->json($resp, 500);
             }
         }
     }
@@ -266,14 +322,36 @@ class UtilisateurController extends AbstractController
 
     }
 
-    #[Route("/resetTentative/{id}", methods: ["GET"])]
+    #[Route("/signin/resetTentative/{id}", methods: ["GET"])]
     public function resetTentative(int $id)
     {
         $logTentative=$this->tentativeRepository->getLastByIdUtilisateur($id);
         $logTentative->setTentative($this->configService->getTentativeRef());
         $this->tentativeRepository->update($logTentative);
-        return $this->json("Tentative Reinitialiser avec succes", 200, [], []);
+        $resp = ResponseService::getJSONTemplate('success', [
+            "message"  => "Tentative de réinitialiser avec succès",
+        ]);
+        return $this->json($resp);
+    }
 
+    #[Route("/get-utilisateur", methods: ["POST"])]
+    public function getUserByToken(Request $request, TokenUtilisateurRepository $repository): JsonResponse {
+        $token = $this->tokenManager->extractTokenFromRequest($request);
+        
+        $tokenUtilisateur = $repository->findOneBy(["token" => $token]);
+        $utilisateur = $this->utilisateurRepository->findOneBy(["id" => $tokenUtilisateur->getUtilisateur()->getId()]);
+
+        if ($utilisateur) {
+            $resp = ResponseService::getJSONTemplate('success', [
+                "message" => "Identification réussie"
+            ]);
+            return $this->json($resp);
+        } else {
+            $resp = ResponseService::getJSONTemplate('error', [
+                "message" => "Utilisateur non trouvé"
+            ]);
+            return $this->json($resp);
+        }
     }
 
 }

@@ -26,4 +26,9 @@ class ConfigService
         return $this->configRepository->findByNom("delais")->getValeur();
     }
 
+    public function getTokenRef()
+    {
+        return $this->configRepository->findByNom("token")->getValeur();
+    }
+
 }
