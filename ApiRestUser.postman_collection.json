@@ -1,0 +1,151 @@
+{
+	"info": {
+		"_postman_id": "293ba255-cf34-4901-a2c9-2d542aae06d9",
+		"name": "ApiRestUser",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "35189889"
+	},
+	"item": [
+		{
+			"name": "Inscription",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"nom\":\"Aina\",\r\n    \"prenom\":\"Mia\",\r\n    \"dateNaissance\":\"2005-04-27\",\r\n    \"genre\":1,\r\n    \"mail\":\"andyrdn4@gmail.com\",\r\n    \"motDePasse\":\"haha\",\r\n    \"verification\":\"haha\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8080/utilisateur/signup",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8080",
+					"path": [
+						"utilisateur",
+						"signup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\":\"el.inar7305@gmail.com\",\r\n    \"mdp\":\"lol\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8080/utilisateur/signin",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8080",
+					"path": [
+						"utilisateur",
+						"signin"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CheckPin",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"code\":\"686327\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/utilisateur/confirmation/1",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"utilisateur",
+						"confirmation",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "configTentative",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8080/config/tentative/4",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8080",
+					"path": [
+						"config",
+						"tentative",
+						"4"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "configDelais",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "Validation inscription",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "Update utilisateur",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}
