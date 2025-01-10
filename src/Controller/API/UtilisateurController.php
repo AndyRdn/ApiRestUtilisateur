@@ -341,8 +341,16 @@ class UtilisateurController extends AbstractController
         $tokenUtilisateur = $repository->findOneBy(["token" => $token]);
         $utilisateur = $this->utilisateurRepository->findOneBy(["id" => $tokenUtilisateur->getUtilisateur()->getId()]);
 
-        if (condition) {
-            # code...
+        if ($utilisateur) {
+            $resp = ResponseService::getJSONTemplate('success', [
+                "message" => "Identification réussie"
+            ]);
+            return $this->json($resp);
+        } else {
+            $resp = ResponseService::getJSONTemplate('error', [
+                "message" => "Utilisateur non trouvé"
+            ]);
+            return $this->json($resp);
         }
     }
 
