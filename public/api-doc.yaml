@@ -1,0 +1,206 @@
+openapi: 3.0.0
+info:
+  title: 'My API Documentation'
+  version: '1.0'
+paths:
+  /app/src/Controller: {  }
+  '/_error/{code}':
+    get:
+      operationId: get__preview_error
+      parameters:
+        -
+          name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: \d+
+      responses:
+        default:
+          description: ''
+    put:
+      operationId: put__preview_error
+      parameters:
+        -
+          name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: \d+
+      responses:
+        default:
+          description: ''
+    post:
+      operationId: post__preview_error
+      parameters:
+        -
+          name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: \d+
+      responses:
+        default:
+          description: ''
+    delete:
+      operationId: delete__preview_error
+      parameters:
+        -
+          name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: \d+
+      responses:
+        default:
+          description: ''
+    options:
+      operationId: options__preview_error
+      parameters:
+        -
+          name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: \d+
+      responses:
+        default:
+          description: ''
+    head:
+      operationId: head__preview_error
+      parameters:
+        -
+          name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: \d+
+      responses:
+        default:
+          description: ''
+    patch:
+      operationId: patch__preview_error
+      parameters:
+        -
+          name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: \d+
+      responses:
+        default:
+          description: ''
+    trace:
+      operationId: trace__preview_error
+      parameters:
+        -
+          name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: \d+
+      responses:
+        default:
+          description: ''
+  /api/doc:
+    get:
+      operationId: get_apiDoc
+      responses:
+        default:
+          description: ''
+  /config/tentative:
+    post:
+      operationId: post_app_api_config_updatetentatite
+      responses:
+        default:
+          description: ''
+  /config/delais:
+    post:
+      operationId: post_app_api_config_updatedelais
+      responses:
+        default:
+          description: ''
+  /config/token:
+    post:
+      operationId: post_app_api_config_updatevaliditetoken
+      responses:
+        default:
+          description: ''
+  /utilisateur/signup:
+    post:
+      operationId: post_signin
+      responses:
+        default:
+          description: ''
+  '/utilisateur/signup/verification/{id}':
+    get:
+      operationId: get_app_api_utilisateur_signupvalidation
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        default:
+          description: ''
+  /utilisateur/signin:
+    post:
+      operationId: post_app_api_utilisateur_login
+      responses:
+        default:
+          description: ''
+  '/utilisateur/signin/confirmation/{id}':
+    post:
+      operationId: post_app_api_utilisateur_checkpin
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        default:
+          description: ''
+  '/utilisateur/update/{id}':
+    post:
+      operationId: post_app_api_utilisateur_updateuser
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        default:
+          description: ''
+  '/utilisateur/signin/resetTentative/{id}':
+    get:
+      operationId: get_app_api_utilisateur_resettentative
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        default:
+          description: ''
+  /utilisateur/get-utilisateur:
+    post:
+      operationId: post_app_api_utilisateur_getuserbytoken
+      responses:
+        default:
+          description: ''
+
