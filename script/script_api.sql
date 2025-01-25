@@ -1,3 +1,5 @@
+create extension if not exists pgcrypto;
+
 create sequence double_authentification_id_seq;
 
 alter sequence double_authentification_id_seq owner to postgres;
@@ -154,4 +156,6 @@ alter table token_utilisateur
 
 create unique index uniq_312d3129fb88e14f
     on token_utilisateur (utilisateur_id);
+
+insert into utilisateur values (nextval('utilisateur_id_seq'), 'Miarantsoa', 'Ainaharison', '2005-11-10', 1, 'miarantsoasuper3000@gmail.com', digest('haha', 'sha256'))
 

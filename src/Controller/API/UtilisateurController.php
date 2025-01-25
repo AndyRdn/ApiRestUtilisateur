@@ -73,7 +73,7 @@ class UtilisateurController extends AbstractController
 
     }
 
-    #[Route("/signup", name: "signin", methods: ["POST"])]
+    #[Route("/signup", name: "signup", methods: ["POST"])]
     public function signup(MailerInterface $mailer, Request $request, InscriptionPendingRepository $repository): JsonResponse
     {
         $jsonData = json_decode($request->getContent(), true);
@@ -180,6 +180,12 @@ class UtilisateurController extends AbstractController
 //        dd($mdp);
 
         $utilisateur=$this->utilisateurRepository->findByLogin($email);
+        if($utilisateur == null) {
+            $resp = ResponseService::getJSONTemplate('error', [
+                "message"  => "Utilisateur inexistant"
+            ]);
+            return $this->json($resp, 500, [], []);
+        }
         $hashMdp=hash("sha256", $mdp);
 //        dd($hashMdp);
         $tentative=$this->tentativeRepository->getLastByIdUtilisateur($utilisateur->getId());
