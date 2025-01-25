@@ -18,6 +18,14 @@ create sequence utilisateur_id_seq;
 
 alter sequence utilisateur_id_seq owner to postgres;
 
+create sequence config_id_seq;
+
+alter sequence config_id_seq owner to postgres;
+
+create sequence token_utilisateur_id_seq;
+
+alter sequence token_utilisateur_id_seq owner to postgres;
+
 create table doctrine_migration_versions
 (
     version        varchar(191) not null
@@ -88,7 +96,7 @@ create table double_authentification
         primary key,
     utilisateur_id integer
         constraint fk_de0128cdfb88e14f
-        references utilisateur,
+            references utilisateur,
     code           integer      not null,
     daty           timestamp(0) not null
 );
@@ -107,7 +115,7 @@ create table login_tentative
         primary key,
     utilisateur_id integer not null
         constraint fk_bb5da80cfb88e14f
-        references utilisateur,
+            references utilisateur,
     tentative      integer not null
 );
 
@@ -117,6 +125,33 @@ alter table login_tentative
 create unique index uniq_bb5da80cfb88e14f
     on login_tentative (utilisateur_id);
 
-insert into config values (1,'tentative','3');
-insert into config values (2,'delais','90');
+create table config
+(
+    id     integer      not null
+        primary key,
+    nom    varchar(255) not null,
+    valeur varchar(255) not null
+);
+
+alter table config
+    owner to postgres;
+
+create table token_utilisateur
+(
+    id             integer      not null
+        primary key,
+    utilisateur_id integer
+        constraint fk_312d3129fb88e14f
+            references utilisateur,
+    token          varchar(255) not null,
+    updated_at     timestamp(0) not null
+);
+
+comment on column token_utilisateur.updated_at is '(DC2Type:datetime_immutable)';
+
+alter table token_utilisateur
+    owner to postgres;
+
+create unique index uniq_312d3129fb88e14f
+    on token_utilisateur (utilisateur_id);
 
