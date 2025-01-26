@@ -13,7 +13,8 @@ RUN apk add postgresql-dev
 RUN docker-php-ext-install pgsql pdo_pgsql
 RUN apk del postgresql-libs libsasl db
 
-RUN pecl install apcu xdebug
+RUN pecl install apcu && \
+    pecl install xdebug
 RUN docker-php-ext-enable apcu opcache
 
 RUN apk add icu-libs icu
