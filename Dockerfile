@@ -1,6 +1,11 @@
 ARG PHP_VERSION=8.2.4
 ARG NGINX_VERSION=1.22.1
 
+FROM alpine as preprocessor
+RUN apk add --no-cache dos2unix
+COPY docker/php/docker-entrypoint.sh /entrypoint.sh
+RUN dos2unix /entrypoint.sh && chmod +x /entrypoint.sh
+
 FROM php:${PHP_VERSION}-fpm-alpine AS app_php
 
 ARG WORKDIR=/app
@@ -13,8 +18,7 @@ RUN apk add postgresql-dev
 RUN docker-php-ext-install pgsql pdo_pgsql
 RUN apk del postgresql-libs libsasl db
 
-RUN pecl install apcu && \
-    pecl install xdebug
+RUN pecl install apcu
 RUN docker-php-ext-enable apcu opcache
 
 RUN apk add icu-libs icu
@@ -54,8 +58,7 @@ RUN set -eux \
 
 VOLUME ${WORKDIR}/var
 
-COPY docker/php/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
-RUN chmod +x /usr/local/bin/docker-entrypoint
+COPY --from=preprocessor /entrypoint.sh /usr/local/bin/docker-entrypoint
 
 ENTRYPOINT ["docker-entrypoint"]
 CMD ["php-fpm"]
