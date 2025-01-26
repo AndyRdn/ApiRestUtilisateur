@@ -13,6 +13,8 @@ services:
       - ./script/script_api.sql:/docker-entrypoint-initdb.d/script_api.sql
     ports:
       - "5432:5432"
+    networks:
+      - app-network
 
   php:
     build:
@@ -30,6 +32,8 @@ services:
     volumes:
       - .:/app:rw,cached
       - var:/app/var
+    networks:
+      - app-network
 
   nginx:
     build:
@@ -43,7 +47,14 @@ services:
       - ./public:/app/public:ro
     ports:
       - "8080:80"
+    networks:
+      - app-network
+
 
 volumes:
   db-data:
   var:
+
+networks:
+  app-network:
+    driver: bridge
