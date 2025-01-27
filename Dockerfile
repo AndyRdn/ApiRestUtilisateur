@@ -1,5 +1,5 @@
 ARG PHP_VERSION=8.2.4
-ARG NGINX_VERSION=1.22.1
+ARG NGINX_VERSION=1.22.0
 
 FROM alpine as preprocessor
 RUN apk add --no-cache dos2unix
@@ -38,14 +38,18 @@ RUN apk del --purge .build-deps
 RUN rm -rf /tmp/pear
 RUN rm -rf /var/cache/apk/*
 
-COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
+COPY --from=composer:2.2 /usr/bin/composer /usr/local/bin/composer
 COPY docker/php/php.ini $PHP_INI_DIR/conf.d/php.ini
 COPY docker/php/php-cli.ini $PHP_INI_DIR/conf.d/php-cli.ini
+
+
 
 RUN mkdir -p ${WORKDIR}
 WORKDIR ${WORKDIR}
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
+
+
 
 COPY composer.json composer.lock symfony.lock ./
 RUN set -eux; \
@@ -59,6 +63,8 @@ RUN set -eux \
 VOLUME ${WORKDIR}/var
 
 COPY --from=preprocessor /entrypoint.sh /usr/local/bin/docker-entrypoint
+
+
 
 ENTRYPOINT ["docker-entrypoint"]
 CMD ["php-fpm"]
