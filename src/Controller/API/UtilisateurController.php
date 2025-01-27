@@ -197,21 +197,20 @@ class UtilisateurController extends AbstractController
             if ($code== null){
                 $mailer->send($this->email->createMail($utilisateur->getMail(), EmailSubject::AUTHENTIFICATION->value, $utilisateur->getId()));
                 $resp = ResponseService::getJSONTemplate('success', [
-                    "message"  => "Un email de confirmation a été envoyé",
-                    "data" => $utilisateur->getId()
+                    "message"  => "Un email de confirmation a ete envoyé"
                 ]);
                 return $this->json($resp, 200, [], []);
             }else{
                 $resp = ResponseService::getJSONTemplate('error', [
-                    "message"  => "Le code envoyé précédement est encore valide"
+                    "message"  => "Le code envoyer précédement est encore valide"
                 ]);
-                return $this->json($resp, 500, [], []);
+                return $this->json($resp, 200, [], []);
             }
 
 
         }else{
 //          check si
-            if ($tentative->getTentative()==1){
+            if ($tentative->getTentative()==0){
                 //cree une email Pour le reset de la tentative
                 $mailer->send($this->email->createMail($utilisateur->getMail(), EmailSubject::RESET->value, $utilisateur->getId()));
                 $resp = ResponseService::getJSONTemplate('error', [
@@ -222,7 +221,7 @@ class UtilisateurController extends AbstractController
                 $tentative->setTentative($tentative->getTentative()-1);
                 $this->tentativeRepository->update($tentative);
                 $resp = ResponseService::getJSONTemplate('error', [
-                    "message"  => "Mot de passe Incorrecte. Tentative restante: ".$tentative->getTentative()
+                    "message"  => "Mot de passe Incorrecte . Tentative restante :".$tentative->getTentative()
                 ]);
                 return $this->json($resp, 500, [], []);
             }
@@ -313,8 +312,7 @@ class UtilisateurController extends AbstractController
         if (!empty($updatedFields)) {
             // updating the user row in table "utilisateur"
             $this->entityManager->persist($user);
-
-            $this->entityManager->flush();
+            
             // inserting a new user row for the update (at today's dateTime) in table "historique_utilisateur"
             $histoUser->makeFromUser($user, new \DateTimeImmutable());
             $this->entityManager->persist($histoUser);
