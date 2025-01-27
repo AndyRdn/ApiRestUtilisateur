@@ -161,6 +161,13 @@ INSERT INTO public.config (id, nom, valeur) VALUES (1, 'tentative', '4');
 INSERT INTO public.config (id, nom, valeur) VALUES (2, 'delais', '90');
 INSERT INTO public.config (id, nom, valeur) VALUES (3, 'token', '3600');
 
+
+INSERT INTO public.utilisateur (id, prenom, nom, date_naissance, genre, mail, mot_de_passe) VALUES (2, 'Mia', 'Aina', '2005-04-27 00:00:00', 1, 'miarantsoasuper3000@gmail.com', '$2y$12$FtzibUJA32B7Pluso7n8ROlkeEK/2bwopPEvLJY1Qn1McOAEKS.5O');
+INSERT INTO public.utilisateur (id, prenom, nom, date_naissance, genre, mail, mot_de_passe) VALUES (3, 'Andy', 'Aina', '2005-04-27 00:00:00', 1, 'irina.elina.r@gmail.com', '$2y$12$zn9AZBOyi7l4jrOFiJwXDOamp75WbttxlIH1tq4Hyd6MQpqtu7yvy');
+INSERT INTO public.utilisateur (id, prenom, nom, date_naissance, genre, mail, mot_de_passe) VALUES (4, 'Andy', 'Roberto', '2005-04-27 00:00:00', 0, 'andyrdn4@gmail.com', '090b235e9eb8f197f2dd927937222c570396d971222d9009a9189e2b6cc0a2c1');
+INSERT INTO public.utilisateur (id, prenom, nom, date_naissance, genre, mail, mot_de_passe) VALUES (5, 'Irina', 'El', '2005-04-27 00:00:00', 0, 'el.inar7305@gmail.com', '07123e1f482356c415f684407a3b8723e10b2cbbc0b8fcd6282c49d37c9c1abc');
+
+
 INSERT INTO public.doctrine_migration_versions (version, executed_at, execution_time) VALUES ('DoctrineMigrations\Version20241219060350', '2024-12-19 22:22:11', 45);
 INSERT INTO public.doctrine_migration_versions (version, executed_at, execution_time) VALUES ('DoctrineMigrations\Version20241219204840', '2024-12-19 22:22:12', 7);
 INSERT INTO public.doctrine_migration_versions (version, executed_at, execution_time) VALUES ('DoctrineMigrations\Version20241220082114', '2024-12-20 09:21:37', 33);
@@ -233,9 +240,3 @@ INSERT INTO public.script_api (c1, c2) VALUES (')', null);
 INSERT INTO public.script_api (c1, c2) VALUES ('comment on column token_utilisateur.updated_at is ''(DC2Type:datetime_immutable)''', null);
 INSERT INTO public.script_api (c1, c2) VALUES ('    owner to postgres', null);
 INSERT INTO public.script_api (c1, c2) VALUES ('    on token_utilisateur (utilisateur_id)', null);
-
-
-INSERT INTO public.utilisateur (id, prenom, nom, date_naissance, genre, mail, mot_de_passe) VALUES (2, 'Mia', 'Aina', '2005-04-27 00:00:00', 1, 'miarantsoasuper3000@gmail.com', '$2y$12$FtzibUJA32B7Pluso7n8ROlkeEK/2bwopPEvLJY1Qn1McOAEKS.5O');
-INSERT INTO public.utilisateur (id, prenom, nom, date_naissance, genre, mail, mot_de_passe) VALUES (3, 'Andy', 'Aina', '2005-04-27 00:00:00', 1, 'irina.elina.r@gmail.com', '$2y$12$zn9AZBOyi7l4jrOFiJwXDOamp75WbttxlIH1tq4Hyd6MQpqtu7yvy');
-INSERT INTO public.utilisateur (id, prenom, nom, date_naissance, genre, mail, mot_de_passe) VALUES (4, 'Andy', 'Roberto', '2005-04-27 00:00:00', 0, 'andyrdn4@gmail.com', '090b235e9eb8f197f2dd927937222c570396d971222d9009a9189e2b6cc0a2c1');
-INSERT INTO public.utilisateur (id, prenom, nom, date_naissance, genre, mail, mot_de_passe) VALUES (5, 'Irina', 'El', '2005-04-27 00:00:00', 0, 'el.inar7305@gmail.com', '07123e1f482356c415f684407a3b8723e10b2cbbc0b8fcd6282c49d37c9c1abc');
