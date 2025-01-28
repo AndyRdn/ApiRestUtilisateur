@@ -351,7 +351,8 @@ class UtilisateurController extends AbstractController
 
         if ($utilisateur    ) {
             $resp = ResponseService::getJSONTemplate('success', [
-                "message" => "Identification réussie"
+                "message" => "Identification réussie",
+                "data" => $utilisateur
             ]);
             return $this->json($resp);
         } else {
