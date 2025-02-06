@@ -33,5 +33,38 @@ services:
                 method: onKernelController,
             }
 
+    kreait_firebase.factory:
+        class: Kreait\Firebase\Factory
+        arguments:
+            - '%env(FIREBASE_CREDENTIALS)%'
+            - {
+                projectId: '%env(FIREBASE_PROJECT_ID)%'
+            }
+
+    Kreait\Firebase\Database:
+        factory: ['@kreait_firebase.factory', 'createDatabase']
+
+    Kreait\Firebase\Auth:
+        factory: ['@kreait_firebase.factory', 'createAuth']
+
+    Kreait\Firebase\Contract\Firestore:
+        factory: ['@kreait_firebase.factory', 'createFirestore']
+
+    Kreait\Firebase\Storage:
+        factory: ['@kreait_firebase.factory', 'createStorage']
+
+    App\Service\FirebaseUserSyncService:
+        arguments:
+            $firestore: '@Kreait\Firebase\Contract\Firestore'
+            $em: '@doctrine.orm.entity_manager'
+
+    App\EventSubscriber\UserSyncSubscriber:
+        tags:
+            - { name: doctrine.event_subscriber }
+
+    App\Command\SyncUsersCommand:
+        tags: [ console.command ]
+
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

@@ -19,6 +19,9 @@ class Utilisateur implements \JsonSerializable
     #[ORM\Column]
     private ?int $id = null;
 
+    #[ORM\Column(type: 'string', length: 255, nullable: true, unique: true)]
+    private ?string $firebaseId = null;
+
     #[ORM\Column]
     #[Groups(["utilisateur.info", "update"])]
     private ?string $prenom = null;
@@ -68,6 +71,17 @@ class Utilisateur implements \JsonSerializable
     {
         $this->id = $id;
 
+        return $this;
+    }
+
+    public function getFirebaseId(): ?string
+    {
+        return $this->firebaseId;
+    }
+
+    public function setFirebaseId(?string $firebaseId): self
+    {
+        $this->firebaseId = $firebaseId;
         return $this;
     }
 
@@ -226,6 +240,7 @@ class Utilisateur implements \JsonSerializable
     {
         return [
             "id" => $this->id,
+            'firebaseId' => $this->firebaseId,
             "nom" => $this->nom,
             "prenom" => $this->prenom,
             "dateNaissance" => $this->dateNaissance,

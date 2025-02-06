@@ -1,3 +1,7 @@
+create database api_rest_utilisateur;
+
+\c api_rest_utilisateur;
+
 create extension if not exists pgcrypto;
 
 create sequence double_authentification_id_seq;

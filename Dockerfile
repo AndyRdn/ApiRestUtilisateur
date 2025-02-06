@@ -42,7 +42,8 @@ COPY --from=composer:2.2 /usr/bin/composer /usr/local/bin/composer
 COPY docker/php/php.ini $PHP_INI_DIR/conf.d/php.ini
 COPY docker/php/php-cli.ini $PHP_INI_DIR/conf.d/php-cli.ini
 
-
+COPY config/firebase/service-account.json ${WORKDIR}/config/firebase/service-account.json
+RUN chmod 644 ${WORKDIR}/config/firebase/service-account.json
 
 RUN mkdir -p ${WORKDIR}
 WORKDIR ${WORKDIR}
